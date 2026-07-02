@@ -1,5 +1,4 @@
 import { Search } from 'lucide-react'
-import React from 'react'
 import { useConversationsContext } from '../../context/ConversationsContext'
 
 const SearchBar = () => {

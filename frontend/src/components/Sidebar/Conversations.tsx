@@ -1,4 +1,4 @@
-import React from "react";
+
 import { useConversationsContext } from "../../context/ConversationsContext";
 import ConversationItem from "./ConversationItem";
 

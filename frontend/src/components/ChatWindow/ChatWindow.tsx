@@ -1,4 +1,4 @@
-import React from 'react'
+
 import ChatPlaceholder from './ChatPlaceholder'
 import { useConversationStore } from '../../stores/conversationStore'
 import ChatHeader from './ChatHeader'

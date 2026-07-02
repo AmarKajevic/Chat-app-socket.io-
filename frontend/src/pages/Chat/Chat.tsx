@@ -1,4 +1,4 @@
-import React from "react";
+
 import ChatWindow from "../../components/ChatWindow/ChatWindow";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { SocketProvider } from "../../context/SocketContext";

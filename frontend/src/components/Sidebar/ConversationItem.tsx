@@ -1,4 +1,4 @@
-import React from 'react'
+
 import type { Conversations } from '../../context/ConversationsContext'
 import { useAuthStore } from '../../stores/authStore'
 import { useConversationStore } from '../../stores/conversationStore'

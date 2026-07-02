@@ -1,5 +1,5 @@
 import { MessageCircle } from 'lucide-react'
-import React from 'react'
+
 
 const ChatPlaceholder = () => {
   return (

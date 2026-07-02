@@ -2,7 +2,7 @@ import type { Message } from "../../services/messageService"
 import { useAuthStore } from "../../stores/authStore"
 
 
-const MessageItem = ({_id, sender, content, read, createdAt}: Message) => {
+const MessageItem = ({sender, content,  createdAt}: Message) => {
     const {user} = useAuthStore()
     const userIsSender = sender._id === user?.id;
 

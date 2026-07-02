@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import  { useEffect, useRef } from "react";
 import { useConversationStore } from "../../stores/conversationStore";
 import { useMessages } from "../../hooks/useMessages";
 import MessageItem from "./MessageItem";

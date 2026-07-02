@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import  { useState } from 'react'
 import {Mail} from "lucide-react"
 import LoginForm from './partials/LoginForm';
 import RegisterForm from './partials/RegisterForm';
