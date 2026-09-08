@@ -46,8 +46,7 @@ export function useMessages(
 
     }, [containerRef, query])
 
-    console.log("hasNextPage:", query.hasNextPage)
-    console.log("lastPage:", query.data?.pages.at(-1))
+
 
     return {
         ...query,

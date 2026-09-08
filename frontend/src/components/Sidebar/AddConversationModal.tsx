@@ -30,7 +30,7 @@ const AddConversationModal = ({ isOpen, onClose }: AddConversationModalProps) =>
     const { socket } = useSocketContext();
     const { user } = useAuthStore();
     
-    console.log(user); // Dohvati korisnika
+
 
     const connectCode = watch('connectCode');
 

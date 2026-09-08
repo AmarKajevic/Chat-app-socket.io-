@@ -32,7 +32,7 @@ export const SocketProvider: React.FC<{children: React.ReactNode}> = ({children}
         setSocket(socketClient)
 
         socketClient.on("connect", () => {
-            console.log("socket connected", socketClient.id)
+          
         })
         socketClient.on("connect_error", (error) => {
             console.error("connection error", error);

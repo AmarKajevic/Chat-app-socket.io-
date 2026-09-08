@@ -2,7 +2,7 @@ import Header from "./Header";
 import SearchBar from "./SearchBar";
 import Conversations from "./Conversations";
 import UserProfile from "./UserProfile";
-import { ConversationsProvider } from "../../context/ConversationsContext";
+
 
 
 const Sidebar = () => {

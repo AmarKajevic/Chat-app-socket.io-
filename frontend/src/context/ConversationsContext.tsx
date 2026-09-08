@@ -66,7 +66,7 @@ export const ConversationsProvider: React.FC<{ children: React.ReactNode }> = ({
     }, [])
 
     const handleNewConversation = (conversation: Conversations) => {
-        console.log("conversation:accept", conversation)
+       
         setConversations((prev) => {
             return [...prev, conversation]
         })
@@ -80,7 +80,7 @@ export const ConversationsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const handleConversationUpdateUnreadCounts = (conversation: { conversationId: string, unreadCounts: Record<string, number> }) => {
-        console.log("conversation:update-unread-counts", conversation)
+
         setConversations((prev) => {
             return prev.map((c) => {
                 if (c.conversationId === conversation.conversationId) {
