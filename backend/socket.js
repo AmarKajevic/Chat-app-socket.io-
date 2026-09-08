@@ -11,7 +11,7 @@ export const initializeSocket = async (io) => {
     io.on("connection", async (socket) => {
        try {
         const user = socket.user;
-        console.log("User Connected", user.id)
+     
         socket.join(user._id.toString())
 
         await RedisService.addUserSession(user.id, socket.id)

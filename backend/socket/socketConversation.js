@@ -257,7 +257,7 @@ export const ConversationSendMessage = async (io, socket, data) => {
         if (conversation.isAiChat) {
             // Pronađi AI korisnika (pretpostavljamo da postoji samo jedan)
             const aiUser = await User.findOne({ isAI: true });
-            console.log("AI User:", aiUser);
+
             if (!aiUser) {
             // Opcija 1: Vrati grešku
             socket.emit("conversation:start-ai:error", { 
@@ -384,9 +384,9 @@ export const startAiConversation = async (io, socket) => {
                 // fullName: "Chatty AI",
                 // connectCode: "CHATTY_AI_" + Date.now(),
             });
-            console.log("✅ Chatty AI created with id:", aiUser._id);
+
         } else {
-            console.log("✅ Chatty AI found with id:", aiUser._id);
+            return aiUser; 
         }
 
         // ---- KREIRAJ ILI PRONAĐI KONVERZACIJU ----
@@ -400,9 +400,9 @@ export const startAiConversation = async (io, socket) => {
                 participants: [userId, aiUser._id],
                 isAiChat: true
             });
-            console.log("🆕 New AI conversation created:", conversation._id);
+           
         } else {
-            console.log("♻️ Existing AI conversation found:", conversation._id);
+            return conversation;
         }
 
         // ---- SOCKET ROOM ----

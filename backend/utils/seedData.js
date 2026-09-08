@@ -51,7 +51,7 @@ async function seed() {
         for (const data of usersData) {
             data.password = hashPassword;
             const user = await User.create(data);
-            console.log(`User created ${user.fullName}`);
+
             users.push(user);
         }
 
@@ -62,7 +62,7 @@ async function seed() {
             recipient: user2._id
         });
 
-        console.log(`Friendship created: ${friendShip.id}`);
+
 
         
 
@@ -74,7 +74,7 @@ async function seed() {
             }
         });
 
-        console.log(`Conversation created ${conversation.id}`);
+
 
         const messages = []
         for(let i = 0; i< 30; i++) {
@@ -101,7 +101,7 @@ async function seed() {
 
 
         await mongoose.disconnect();
-        console.log("Disconnected from mongo");
+   
 
     } catch (error) {
         console.error("Error seeding database:", error);

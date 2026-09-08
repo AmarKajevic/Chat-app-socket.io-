@@ -15,7 +15,7 @@ class RedisService {
             this.client.on("error", (error) => console.error("Redis client error", error));
 
             await this.client.connect();
-            console.log("Redis connected")
+           
             
         } catch (error) {
             console.error("failed to initialize redis", error)
@@ -25,7 +25,7 @@ class RedisService {
         if(this.client) {
             await this.client.quit();
             this.client =null;
-            console.log("redis disconected")
+            
         }
     }
     async _safe(action, fallback =null){

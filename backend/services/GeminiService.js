@@ -47,7 +47,7 @@ export const generateAIResponse = async (userMessage, history = []) => {
                     response.candidates?.[0]?.content?.parts?.[0]?.text || 
                     "I'm sorry, I couldn't generate a response.";
 
-      console.log(`✅ AI responded using model: ${modelName}`);
+   
       return reply;
     } catch (error) {
       lastError = error;
