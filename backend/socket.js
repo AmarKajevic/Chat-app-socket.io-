@@ -4,7 +4,8 @@ import { conversationMarkAsRead,
         conversationRequest,
         ConversationSendMessage, 
         ConversationTyping, 
-        notifyConversationOnlineStatus } from "./socket/socketConversation.js";
+        notifyConversationOnlineStatus, 
+        startAiConversation} from "./socket/socketConversation.js";
 
 export const initializeSocket = async (io) => {
     io.on("connection", async (socket) => {
@@ -22,6 +23,7 @@ export const initializeSocket = async (io) => {
         socket.on("conversation:mark-as-read",  (data) => conversationMarkAsRead(io, socket, data))
         socket.on("conversation:send-message",  (data) => ConversationSendMessage(io, socket, data))
         socket.on("conversation:typing",  (data) => ConversationTyping(io, socket, data))
+        socket.on('conversation:start-ai', (data) => startAiConversation(io, socket, data));
 
         socket.on('disconnect', async () => {
             

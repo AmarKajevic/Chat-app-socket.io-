@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 const conversationSchema = mongoose.Schema({
     participants: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -18,13 +19,28 @@ const conversationSchema = mongoose.Schema({
         type: Map,
         of: Number,
         default: {}
+    },
+    isAiChat : {
+        type: Boolean,
+        default: false
     }
-}, {timestamp: true})
+
+}, {timestamps: true})
 
 conversationSchema.index({"participants.0": 1, "participants.1": 1}, {unique: true})
-conversationSchema.pre("save", function() {
+conversationSchema.pre("save", async function() {
     if(this.participants && this.participants.length === 2) {
         this.participants = this.participants.map(p => p.toString()).sort();
+    }
+    if(this.isNew) {
+        const User = mongoose.model("User");
+        const participants = await User.find({
+            _id: { $in: this.participants },
+            isAI: true
+        })
+        if(participants.length === 1) {
+            this.isAiChat = true;
+        }
     }
 
 })

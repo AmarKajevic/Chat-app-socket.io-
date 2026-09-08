@@ -4,39 +4,44 @@ import Conversation from "../models/Conversation.js"
 import Message from "../models/Message.js"
 import RedisService from "../services/RedisService.js"
 import {getChatRoom} from "./helpers.js"
+import { generateAIResponse } from "../services/GeminiService.js"
 
 
 export const notifyConversationOnlineStatus = async (io, socket, online) => {
     try {
-        const userId = socket.userId
-        const user = socket.user
+        const userId = socket.userId;
+        const user = socket.user;
+
 
         const friendships = await Friendship.find({
             $or: [
-                {requester: userId},
-                {recipient: userId}
+                { requester: userId },
+                { recipient: userId }
             ]
-        })
-        friendships.forEach((friendship) => {
-            const isRequester = friendship.requester._id.toString() ===userId.toString();
+        });
+
+        for (const friendship of friendships) {
+            const isRequester = friendship.requester._id.toString() === userId.toString();
             const friendId = isRequester ? friendship.recipient._id : friendship.requester._id;
 
-            const room = getChatRoom(userId.toString(), friendId.toString())
+
+            const friendUser = await User.findById(friendId);
+            if (friendUser && friendUser.isAI) continue;
+
+            const room = getChatRoom(userId.toString(), friendId.toString());
             socket.join(room);
 
-            console.log("Emit: converstaion: online-status");
-            io.to(friendId.toString())
-                .emit('conversation: online-status' , {
-                    friendId: userId,
-                    username: user.username,
-                    online
-                })
-        })
-        
+            io.to(friendId.toString()).emit('conversation:online-status', {
+                friendId: userId,
+                username: user.username,
+                online
+            });
+        }
+
     } catch (error) {
-        console.error("notifyConversationOnlineStatus", error)
+        console.error("notifyConversationOnlineStatus", error);
     }
-}
+};
 
 export const conversationRequest = async (io, socket, data) => {
     try {
@@ -129,16 +134,25 @@ export const conversationMarkAsRead = async (io, socket, data) => {
             ]
         })
 
-        if(!friendShip) {
-            socket.emit("conversation:mark-as-read:error", {error: "Friendship not found"})
-            return;
-        }
 
         const conversation = await Conversation.findById(conversationId)
         if(!conversation) {
             socket.emit("conversation:mark-as-read:error", {error: "Conversation not found"})
             return;
         }
+
+        if (!conversation.isAiChat) {
+        const friendShip = await Friendship.findOne({
+            $or: [
+                { requester: userId, recipient: friendId },
+                { requester: friendId, recipient: userId }
+            ]
+        });
+        if (!friendShip) {
+            socket.emit("conversation:mark-as-read:error", { error: "Friendship not found" });
+            return;
+        }
+    }
 
         conversation.unreadCounts.set(userId.toString(), 0)
         await conversation.save()
@@ -160,43 +174,54 @@ export const conversationMarkAsRead = async (io, socket, data) => {
 
 }
 
+
 export const ConversationSendMessage = async (io, socket, data) => {
     try {
-
-        const {conversationId, content, friendId} = data;
+        const { conversationId, content, friendId } = data;
         const userId = socket.userId;
-
         const user = socket.user;
 
-         const friendShip = await Friendship.findOne({
-            $or: [
-                {requester: userId, recipient: friendId},
-                {requester: friendId, recipient: userId}
-            ]
-        })
-
-        if(!friendShip) {
-            socket.emit("conversation:send-message:error", {error: "Friendship not found"})
+        // 1. Dohvati konverzaciju
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            socket.emit("conversation:send-message:error", { error: "Conversation not found" });
             return;
         }
 
-        const conversation = await Conversation.findById(conversationId)
-        if(!conversation) {
-            socket.emit("conversation:send-message:error", {error: "Conversation not found"})
-            return;
+        // 2. Provera prijateljstva – samo za obične (ne-AI) čatove
+        if (!conversation.isAiChat) {
+            const friendship = await Friendship.findOne({
+                $or: [
+                    { requester: userId, recipient: friendId },
+                    { requester: friendId, recipient: userId }
+                ]
+            });
+            if (!friendship) {
+                socket.emit("conversation:send-message:error", { error: "Friendship not found" });
+                return;
+            }
         }
 
+        // 3. Kreiraj i sačuvaj korisnikovu poruku
         const message = new Message({
             conversation: conversationId,
             sender: userId,
             content
-        })
-        await message.save()
+        });
+        await message.save();
 
-        const currentUnreadCount = conversation.unreadCounts.get(friendId.toString()) || 0;
-        conversation.unreadCounts.set(friendId, currentUnreadCount + 1)
-        await conversation.save()
+        // 4. Ažuriraj unread za primaoca (friendId)
+        const currentUnread = conversation.unreadCounts.get(friendId.toString()) || 0;
+        conversation.unreadCounts.set(friendId.toString(), currentUnread + 1);
 
+        // 5. Ažuriraj lastMessagePreview
+        conversation.lastMessagePreview = {
+            content: content,
+            timestamp: new Date()
+        };
+        await conversation.save();
+
+        // 6. Pripremi podatke za emitovanje korisnikove poruke
         const messageData = {
             _id: message.id,
             sender: {
@@ -206,34 +231,123 @@ export const ConversationSendMessage = async (io, socket, data) => {
             content,
             createdAt: message.createdAt,
             read: message.read
+        };
 
-        }
+        const room = getChatRoom(userId.toString(), friendId.toString());
 
-        const updatedConversation = await Conversation.findById(conversationId)
-
-
-        const room = getChatRoom(userId.toString(), friendId.toString())
+        // 7. Emituj novu poruku svima u sobi
         io.to(room).emit("conversation:new-message", {
             conversationId: conversation.id,
             message: messageData,
+        });
 
-        })
-
+        // 8. Emituj ažuriranje konverzacije (lastMessage, unreadCounts)
         io.to(room).emit("conversation:update-conversation", {
             conversationId: conversation.id,
-            lastMessage: updatedConversation.lastMessagePreview,
+            lastMessage: conversation.lastMessagePreview,
             unreadCounts: {
-                [userId.toString()]: updatedConversation.unreadCounts.get(userId.toString()) || 0,
-                [friendId.toString()]: updatedConversation.unreadCounts.get(friendId.toString()) || 0
+                [userId.toString()]: conversation.unreadCounts.get(userId.toString()) || 0,
+                [friendId.toString()]: conversation.unreadCounts.get(friendId.toString()) || 0
             }
-        })
+        });
 
-    }catch (error) {
-        console.error("Error sending message", error)
-        socket.emit("conversation:send-message:error", {error: "Error sending message"})
+        // =========================================================
+        // 9. AKO JE AI ČAT – generiši AI odgovor (asinhrono, ne blokiramo)
+        // =========================================================
+        if (conversation.isAiChat) {
+            // Pronađi AI korisnika (pretpostavljamo da postoji samo jedan)
+            const aiUser = await User.findOne({ isAI: true });
+            console.log("AI User:", aiUser);
+            if (!aiUser) {
+            // Opcija 1: Vrati grešku
+            socket.emit("conversation:start-ai:error", { 
+                error: "AI assistant is not available. Please contact support." 
+            });
+            return;
+            }
+
+            // Dohvati poslednjih 20 poruka za kontekst (uključujući i ovu novu)
+            const lastMessages = await Message.find({ conversation: conversationId })
+                .sort({ createdAt: -1 })
+                .limit(20)
+                .populate('sender', 'isAI');
+
+            // Formiraj istoriju za AI (od najstarije ka najnovijoj)
+            const history = lastMessages.reverse().map(msg => {
+                const isAISender = msg.sender && msg.sender.isAI === true;
+                return {
+                    role: isAISender ? 'model' : 'user',
+                    content: msg.content
+                };
+            });
+
+            // Pokreni generisanje AI odgovora – bez `await` da ne blokiramo
+            (async () => {
+                try {
+                    const aiReply = await generateAIResponse(content, history);
+
+                    // Sačuvaj AI odgovor kao poruku
+                    const aiMessage = new Message({
+                        conversation: conversationId,
+                        sender: aiUser._id,
+                        content: aiReply,
+                        read: false
+                    });
+                    await aiMessage.save();
+
+                    // Ažuriraj lastMessagePreview i unread za korisnika (pošto je AI poslao)
+                    const conv = await Conversation.findById(conversationId);
+                    conv.lastMessagePreview = {
+                        content: aiReply,
+                        timestamp: new Date()
+                    };
+                    // Povećaj unread za KORISNIKA (on još nije pročitao AI poruku)
+                    const userUnread = conv.unreadCounts.get(userId.toString()) || 0;
+                    conv.unreadCounts.set(userId.toString(), userUnread + 1);
+                    await conv.save();
+
+                    // Pripremi podatke za AI poruku
+                    const aiMessageData = {
+                        _id: aiMessage.id,
+                        sender: {
+                            _id: aiUser.id.toString(),
+                            username: aiUser.username,
+                            isAI: true // flag za frontend
+                        },
+                        content: aiReply,
+                        createdAt: aiMessage.createdAt,
+                        read: false
+                    };
+
+                    // Emituj AI poruku u istu sobu
+                    io.to(room).emit("conversation:new-message", {
+                        conversationId: conversationId,
+                        message: aiMessageData,
+                    });
+
+                    // Emituj ažuriranje konverzacije (sa novim lastMessage i unread)
+                    io.to(room).emit("conversation:update-conversation", {
+                        conversationId: conversationId,
+                        lastMessage: conv.lastMessagePreview,
+                        unreadCounts: {
+                            [userId.toString()]: conv.unreadCounts.get(userId.toString()) || 0,
+                            [friendId.toString()]: conv.unreadCounts.get(friendId.toString()) || 0
+                        }
+                    });
+
+                } catch (aiError) {
+                    console.error("AI response generation failed:", aiError);
+                    socket.emit("conversation:ai-error", { error: "AI failed to respond" });
+                }
+            })(); // Izvršavamo odmah, asinhrono
+        }
+        // =========================================================
+
+    } catch (error) {
+        console.error("Error sending message", error);
+        socket.emit("conversation:send-message:error", { error: "Error sending message" });
     }
-}
-
+};
 export const ConversationTyping = async (io, socket, data) => {
     try {
         const {friendId, isTyping} = data;
@@ -251,3 +365,66 @@ export const ConversationTyping = async (io, socket, data) => {
         console.error("error sending conversation typing state", error)
     }
 }
+
+export const startAiConversation = async (io, socket) => {
+    try {
+        const userId = socket.userId;
+
+        // ---- PRONAĐI ILI KREIRAJ AI KORISNIKA ----
+        let aiUser = await User.findOne({ isAI: true });
+
+        if (!aiUser) {
+            console.warn("⚠️ Chatty AI not found in DB – creating one now...");
+            aiUser = await User.create({
+                name: "Chatty AI",
+                isAI: true,
+                avatar: "https://i.pravatar.cc/150?img=3",
+                // Dodaj obavezna polja ako tvoj model zahteva:
+                // username: "chatty_ai",
+                // fullName: "Chatty AI",
+                // connectCode: "CHATTY_AI_" + Date.now(),
+            });
+            console.log("✅ Chatty AI created with id:", aiUser._id);
+        } else {
+            console.log("✅ Chatty AI found with id:", aiUser._id);
+        }
+
+        // ---- KREIRAJ ILI PRONAĐI KONVERZACIJU ----
+        let conversation = await Conversation.findOne({
+            participants: { $all: [userId, aiUser._id] },
+            isAiChat: true
+        });
+
+        if (!conversation) {
+            conversation = await Conversation.create({
+                participants: [userId, aiUser._id],
+                isAiChat: true
+            });
+            console.log("🆕 New AI conversation created:", conversation._id);
+        } else {
+            console.log("♻️ Existing AI conversation found:", conversation._id);
+        }
+
+        // ---- SOCKET ROOM ----
+        const room = getChatRoom(userId.toString(), aiUser._id.toString());
+        socket.join(room);
+
+        // ---- ODGOVOR KLIJENTU ----
+        socket.emit("conversation:start-ai:success", {
+            conversationId: conversation._id.toString(),
+            aiUser: {
+                id: aiUser._id,
+                username: aiUser.username || "Chatty AI",
+                fullName: aiUser.fullName || "Chatty AI",
+                avatar: aiUser.avatar || "https://i.pravatar.cc/150?img=3",
+                online: true
+            }
+        });
+
+    } catch (error) {
+        console.error("❌ Error starting AI conversation:", error);
+        socket.emit("conversation:start-ai:error", {
+            error: "Failed to start AI chat. Please try again."
+        });
+    }
+};

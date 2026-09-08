@@ -33,6 +33,7 @@ class AuthController {
                 fullName, 
                 email, 
                 password: hashedPassword,
+                isAI: false,
                 connectCode: await generateUniqueConnectCode(),
             })
 
