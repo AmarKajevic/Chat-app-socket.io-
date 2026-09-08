@@ -1,8 +1,9 @@
-import axios from "axios"
+import axios from "axios";
 
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE || "http://localhost:4000/api",
+    // Ako VITE_API_URL nije definisan, koristi '/api' (relativna putanja)
+    baseURL: import.meta.env.VITE_API_URL || "/api",
     withCredentials: true
-})
+});
 
 export default apiClient;
