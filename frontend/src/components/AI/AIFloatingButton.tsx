@@ -7,6 +7,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { useEffect, useState } from "react";
 
 const AIFloatingButton = () => {
+  console.log("🟢 AI Floating Button clicked");
   const { startAIConversation } = useConversationsContext();
   const { selectedConversation } = useConversationStore();
   const { user } = useAuthStore();

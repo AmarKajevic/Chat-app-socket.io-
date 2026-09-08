@@ -369,6 +369,7 @@ export const ConversationTyping = async (io, socket, data) => {
 export const startAiConversation = async (io, socket) => {
     try {
         const userId = socket.userId;
+        console.log("📥 Received conversation:start-ai from", socket.userId);
 
         // ---- PRONAĐI ILI KREIRAJ AI KORISNIKA ----
         let aiUser = await User.findOne({ isAI: true });

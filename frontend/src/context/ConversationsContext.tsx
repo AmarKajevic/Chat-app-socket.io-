@@ -105,6 +105,7 @@ export const ConversationsProvider: React.FC<{ children: React.ReactNode }> = ({
     // --- NOVI HANDLERI ZA AI ---
     const handleStartAISuccess = useCallback((data: { conversationId: string, aiUser: { id: string, username: string, fullName: string, avatar?: string, online: boolean } }) => {
         // Kreiraj novu konverzaciju sa AI prijateljem
+        console.log("📤 Emitting conversation:start-ai");
         const newConversation: Conversations = {
             conversationId: data.conversationId,
             friend: {
