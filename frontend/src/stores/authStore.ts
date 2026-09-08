@@ -5,8 +5,10 @@ export type User = {
     id: string;
     fullName: string;
     username: string;
+    avatar?: string;
     connectCode: string;
     email: string;
+    isAI?: boolean;
 }
 
 interface AuthState {

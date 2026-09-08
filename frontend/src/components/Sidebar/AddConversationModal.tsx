@@ -1,3 +1,4 @@
+// components/Sidebar/AddConversationModal.tsx
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,86 +9,84 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import Modal from "../ui/Modal";
 import { Loader2, Wifi } from "lucide-react";
+import { useAuthStore } from "../../stores/authStore";
 
 interface AddConversationModalProps {
     isOpen: boolean;
-    onClose : () => void;
+    onClose: () => void;
 }
 
 const addConversationSchema = z.object({
-    connectCode: z.string().min(6, {message: "Invalid connect ID"})
-})
+    connectCode: z.string().min(6, { message: "Invalid connect ID" })
+});
 
-type AddConversationFormData = z.infer<typeof addConversationSchema>
+type AddConversationFormData = z.infer<typeof addConversationSchema>;
 
-const AddConversationModal = ({isOpen, onClose}: AddConversationModalProps) => {
-
-    const {register, handleSubmit, watch, reset, formState:{errors}} = useForm<AddConversationFormData>({
+const AddConversationModal = ({ isOpen, onClose }: AddConversationModalProps) => {
+    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<AddConversationFormData>({
         resolver: zodResolver(addConversationSchema)
-    })
+    });
 
-    const {socket} = useSocketContext();
+    const { socket } = useSocketContext();
+    const { user } = useAuthStore();
+    
+    console.log(user); // Dohvati korisnika
 
     const connectCode = watch('connectCode');
 
-    const {isFetching, refetch} = useQuery({
+    const { isFetching, refetch } = useQuery({
         queryKey: ["CheckConnectCode", connectCode],
         queryFn: () => conversationService.checkConnectCode(connectCode),
         enabled: false,
         retry: false
-    })
+    });
 
     const onSubmit = async (formData: AddConversationFormData) => {
-        const result = await refetch()
+        const result = await refetch();
 
-        if(result?.data?.success) {
-            socket?.emit('conversation:request',  {
+        if (result?.data?.success) {
+            socket?.emit('conversation:request', {
                 connectCode: formData.connectCode
-            })
+            });
             onClose();
-
-        }else {
-            toast.error(result.error?.message ?? "Invalid connect id")
+        } else {
+            toast.error(result.error?.message ?? "Invalid connect id");
         }
-    }
+    };
 
     useEffect(() => {
-        if(!isOpen) {
-            reset
+        if (!isOpen) {
+            reset(); // Popravi: dodaj poziv reset()
         }
-    },[isOpen, reset])
-  return (
-    <>
-    <Modal 
-        isOpen={isOpen}
-        onClose={onClose}
-        title="Add conversation"
-    >
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <label htmlFor="connectCode" className="block text-gray-700 mb-2 text-sm">Connect ID</label>
-            <div className="relative mb-2">
-                <Wifi className="absolute inset-y-0 left-3 size-5 text-gray-400 top-3"/>
-                <input
-                    {...register('connectCode')}
-                    className="text-black text-sm w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-            </div>
-            {errors.connectCode && <p className="text-red-500 text-sm">{errors.connectCode.message}</p>}
-            <button
-                type="submit"
-                disabled={isFetching}
-                className="w-full flex justify-center items-center bg-sky-500 text-white py-2 rounded-lg hover:bg-blue-600 transition cursor-pointer"
-            >
-                {isFetching ? <Loader2 className="animate-spin size-5"/>: "Connect"}
+    }, [isOpen, reset]);
 
-            </button>
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Add conversation"
+            connectcode={user?.connectCode} // 🔥 Prosledi KORISNIKOV connectCode
+        >
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <label htmlFor="connectCode" className="block text-gray-700 mb-2 text-sm">Connect ID</label>
+                <div className="relative mb-2">
+                    <Wifi className="absolute inset-y-0 left-3 size-5 text-gray-400 top-3" />
+                    <input
+                        {...register('connectCode')}
+                        className="text-black text-sm w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                </div>
+                {errors.connectCode && <p className="text-red-500 text-sm">{errors.connectCode.message}</p>}
+                <button
+                    type="submit"
+                    disabled={isFetching}
+                    className="w-full flex justify-center items-center bg-sky-500 text-white py-2 rounded-lg hover:bg-blue-600 transition cursor-pointer"
+                >
+                    {isFetching ? <Loader2 className="animate-spin size-5" /> : "Connect"}
+                </button>
+            </form>
+        </Modal>
+    );
+};
 
-        </form>
-
-    </Modal>
-      
-    </>
-  )
-}
-
-export default AddConversationModal
+export default AddConversationModal;
