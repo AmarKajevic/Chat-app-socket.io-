@@ -1,61 +1,188 @@
-Real-Time Chat Application
+# 💬 Chatty — Real-Time Communication Platform
 
-A full-stack real-time chat application built with the MERN stack. The system supports real-time messaging, friend connections, notifications, and presence tracking using WebSockets and Redis.
+<p align="center">
+  <strong>A real-time chat platform built with React, Node.js, Socket.IO, Redis and Google AI.</strong>
+</p>
 
-This project focuses on building a scalable architecture for real-time communication with authentication, efficient state management, and containerized services.
+<p align="center">
+  Users can connect through unique Connect Codes, chat in real time, track online presence, receive notifications and interact with an AI assistant.
+</p>
 
-⚙️ Tech Stack
+<p align="center">
 
-Frontend
+[![React](https://img.shields.io/badge/React-TypeScript-61DAFB?style=for-the-badge\&logo=react\&logoColor=black)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge\&logo=node.js\&logoColor=white)](https://nodejs.org/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-Real--Time-black?style=for-the-badge\&logo=socket.io)](https://socket.io/)
+[![Redis](https://img.shields.io/badge/Redis-Session%20%26%20Presence-DC382D?style=for-the-badge\&logo=redis)](https://redis.io/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?style=for-the-badge\&logo=mongodb)](https://www.mongodb.com/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge\&logo=docker)](https://www.docker.com/)
 
-React (TypeScript)
-Socket.io-client
-Context API / State management
+</p>
 
-Backend
+---
 
-Node.js
-Express.js
-MongoDB (Mongoose)
-Socket.io
-Redis
-JSON Web Tokens (JWT)
+## 📸 Screenshots
 
-DevOps
+### Dashboard
 
-Docker (MongoDB, Redis, Backend services)
+![Dashboard](./screenshots/dashboard.png)
 
- Features
- Authentication
+### Real-Time Chat
 
-Secure user registration and login
-JWT-based authentication (stored in HTTP-only cookies)
+![Chat](./screenshots/chat.png)
 
-Protected API routes
+### Connect Codes
 
-💬 Real-Time Messaging
-Instant messaging using Socket.io
-Typing indicators
-Read receipts
-Unread message counters
+![Connect Codes](./screenshots/connect-code.png)
 
-Friend System
+### AI Assistant
 
-Send and manage friend requests
-Real-time friend request updates
-Online / offline presence tracking
+![AI Assistant](./screenshots/ai-chat.png)
 
-Notifications
+---
 
-Real-time notifications for:
-Friend requests
-Messages
-User status changes
+## ✨ Features
 
-Performance & Scalability
-Redis used for caching and online user tracking
-Optimized socket event handling for real-time updates
+* 🔐 **JWT Authentication** — Secure authentication using HTTP-only cookies
+* ⚡ **Real-Time Messaging** — Instant communication powered by Socket.IO
+* 🔑 **Connect Codes** — Connect with other users using unique codes
+* 👥 **Friend System** — Send, accept and manage friend requests
+* 🟢 **Online Presence** — Real-time online/offline status
+* 🔔 **Real-Time Notifications** — Instant notifications for user activity
+* ✓ **Read Receipts** — Track message status
+* ⌨️ **Typing Indicators** — See when another user is typing
+* 🤖 **AI Assistant** — Integrated Google AI conversational assistant
+* 🔴 **Redis Sessions** — Track multiple active Socket.IO sessions per user
+* 🐳 **Docker** — Containerized development and deployment environment
 
-DevOps
-Dockerized environment for easy setup
-Separate services for MongoDB and Redis
+---
+
+## 🏗️ Architecture
+
+```text
+                    ┌────────────────────┐
+                    │   React + TS       │
+                    │     Frontend       │
+                    └─────────┬──────────┘
+                              │
+                       REST / WebSocket
+                              │
+                              ▼
+                    ┌────────────────────┐
+                    │  Node.js / Express │
+                    │      Backend       │
+                    └──────┬─────┬───────┘
+                           │     │
+                ┌──────────┘     └──────────┐
+                ▼                           ▼
+          ┌──────────┐                ┌──────────┐
+          │ MongoDB  │                │  Redis   │
+          │  Data    │                │ Sessions │
+          └──────────┘                │ Presence │
+                                      └──────────┘
+                                          
+                              │
+                              ▼
+                       ┌─────────────┐
+                       │  Google AI  │
+                       │ AI Assistant│
+                       └─────────────┘
+```
+
+### Redis Presence
+
+Redis stores active Socket.IO sessions using:
+
+```text
+user:{userId}:sessions
+```
+
+Each user can have multiple active sessions. The application uses Redis Sets to track socket IDs and determine whether a user is currently online.
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend**
+
+* React
+* TypeScript
+* Socket.IO Client
+
+**Backend**
+
+* Node.js
+* Express
+* Socket.IO
+* JWT
+
+**Database & Infrastructure**
+
+* MongoDB
+* Redis
+* Docker
+
+**AI**
+
+* Google AI
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone
+
+```bash
+git clone https://github.com/AmarKajevic/Chat-app-socket.io-.git
+
+cd Chat-app-socket.io-
+```
+
+### 2. Environment Variables
+
+Create a `.env` file:
+
+```env
+PORT=
+CLIENT_ORIGIN=
+MONGO_URI=
+JWT_SECRET=
+REDIS_URI=
+GOOGLE_API_KEY=
+```
+
+### 3. Run with Docker
+
+```bash
+docker compose up --build
+```
+
+Or run the frontend and backend separately using the project's package scripts.
+
+---
+
+## 🔮 Future Improvements
+
+* Horizontal Socket.IO scaling with Redis Adapter
+* Message pagination
+* File and image sharing
+* Push notifications
+* AI conversation memory
+* Automated testing
+* Production monitoring
+
+---
+
+## 👨‍💻 Author
+
+**Amar Kajevic**
+
+Full-Stack Developer focused on React, Next.js, Node.js, TypeScript, real-time applications and distributed systems.
+
+### Featured Projects
+
+**[Vendora](https://github.com/AmarKajevic/Vendora-Multi-vendor-ecommerce-platform)**
+Multi-vendor e-commerce platform with Kafka, Redis, Stripe, TensorFlow, Docker and CI/CD.
+
+**[Chatty](https://github.com/AmarKajevic/Chat-app-socket.io-)**
+Real-time communication platform with Socket.IO, Redis and AI.
