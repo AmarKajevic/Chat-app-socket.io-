@@ -385,9 +385,9 @@ export const startAiConversation = async (io, socket) => {
                 // fullName: "Chatty AI",
                 // connectCode: "CHATTY_AI_" + Date.now(),
             });
-
+            console.log("✅ Chatty AI created with id:", aiUser._id);
         } else {
-            return aiUser; 
+            console.log("✅ Chatty AI found with id:", aiUser._id);
         }
 
         // ---- KREIRAJ ILI PRONAĐI KONVERZACIJU ----
@@ -401,9 +401,9 @@ export const startAiConversation = async (io, socket) => {
                 participants: [userId, aiUser._id],
                 isAiChat: true
             });
-           
+            console.log("🆕 New AI conversation created:", conversation._id);
         } else {
-            return conversation;
+            console.log("♻️ Existing AI conversation found:", conversation._id);
         }
 
         // ---- SOCKET ROOM ----
@@ -418,7 +418,8 @@ export const startAiConversation = async (io, socket) => {
                 username: aiUser.username || "Chatty AI",
                 fullName: aiUser.fullName || "Chatty AI",
                 avatar: aiUser.avatar || "https://i.pravatar.cc/150?img=3",
-                online: true
+                online: true,
+                isAI: true // Dodaj flag da frontend zna da je AI
             }
         });
 

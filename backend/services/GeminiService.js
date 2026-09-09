@@ -5,6 +5,7 @@ dotenv.config();
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.GOOGLE_API_KEY;
+console.log("🔑 Google API Key loaded:", apiKey ? "Yes (length: " + apiKey.length + ")" : "No");
 if (!apiKey) {
   console.error("❌ GOOGLE_API_KEY is missing in .env");
 }
