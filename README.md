@@ -1,5 +1,7 @@
 # 💬 Chatty — Real-Time Communication Platform
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge)](https://chatty-ai-app.onrender.com/)
+
 <p align="center">
   <strong>A real-time chat platform built with React, Node.js, Socket.IO, Redis and Google AI.</strong>
 </p>
